@@ -710,7 +710,8 @@ async function loadApp(){
     for(var j=1;j<=28;j++){var d2=new Date(dd);d2.setDate(d2.getDate()-j);chronic+=(dailyKm[d2.toISOString().slice(0,10)]||0);}
     chronic=chronic/4;
     var ratio=chronic>0?+(acute/chronic).toFixed(2):0;
-    if(di<=0){acwrVals.push(ratio);acwrProj.push(null);}
+    if(di<0){acwrVals.push(ratio);acwrProj.push(null);}
+    else if(di===0){acwrVals.push(ratio);acwrProj.push(ratio);}
     else{acwrVals.push(null);acwrProj.push(ratio);}
   }
   var latACWR=acwrVals.filter(function(v){return v!==null;}).slice(-1)[0]||0;
@@ -773,12 +774,18 @@ async function loadApp(){
     {label:'Ukesnitt',data:ewks.map(function(w,i){return{x:new Date(w).toLocaleDateString('no-NO',{day:'2-digit',month:'short'}),y:ewkAvg[i]};}),type:'line',borderColor:'#1D9E75',borderWidth:2,pointRadius:0,fill:false,tension:0.3}
   ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e1f1c',bodyColor:'#e8e6df',callbacks:{label:function(ctx){return(ctx.dataset.label||'')+': '+ctx.parsed.y.toFixed(3)+' m/slag';}}}},scales:{x:{type:'category',grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:16}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},callback:function(v){return v.toFixed(2)+' m';}}}}}});
 
-  // Scatter intensitet - puls på x, m/slag på y
+  // Scatter intensitet - numerisk HR på x, m/slag på y
+  var scatterNormData=effData.filter(function(d){return !d.test;}).map(function(d,i){
+    var alpha=0.3+0.7*(i/Math.max(total-1,1));
+    var r=Math.round(175*alpha),g=Math.round(169*alpha),b=Math.round(236*alpha);
+    return{x:d.hr,y:d.mps,col:'rgba('+r+','+g+','+b+',0.85)'};
+  });
+  var scatterTestData=effData.filter(function(d){return d.test;}).map(function(d){return{x:d.hr,y:d.mps};});
   if(charts.effScatter)charts.effScatter.destroy();
   charts.effScatter=new Chart(gid('effScatterChart'),{type:'scatter',data:{datasets:[
-    {label:'Økt',data:normPts.map(function(p,i){return{x:p.hr,y:p.mps};}),backgroundColor:normPts.map(function(p){return p.col;}),pointRadius:5,pointHoverRadius:7},
-    {label:'3x3 km test',data:testPts.map(function(p){return{x:p.hr,y:p.mps};}),backgroundColor:'#EF9F27',pointRadius:8,pointStyle:'star',pointHoverRadius:10}
-  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e1f1c',bodyColor:'#e8e6df',callbacks:{label:function(ctx){return 'Puls '+ctx.parsed.x+' bpm — '+ctx.parsed.y.toFixed(3)+' m/slag';}}}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},callback:function(v){return v+' bpm';}},title:{display:true,text:'Gjennomsnittspuls',color:'#7a7870',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},callback:function(v){return v.toFixed(2)+' m';}},title:{display:true,text:'m/slag',color:'#7a7870',font:{size:10}}}}}});
+    {label:'Økt',data:scatterNormData.map(function(p){return{x:p.x,y:p.y};}),backgroundColor:scatterNormData.map(function(p){return p.col;}),pointRadius:5,pointHoverRadius:7},
+    {label:'3x3 km test',data:scatterTestData,backgroundColor:'#EF9F27',borderColor:'#ffffff',borderWidth:1.5,pointRadius:9,pointStyle:'star',pointHoverRadius:12}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e1f1c',bodyColor:'#e8e6df',callbacks:{label:function(ctx){return 'Puls '+ctx.parsed.x+' bpm — '+ctx.parsed.y.toFixed(3)+' m/slag';}}}},scales:{x:{type:'linear',grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},callback:function(v){return v+' bpm';}},title:{display:true,text:'Gjennomsnittspuls',color:'#7a7870',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},callback:function(v){return v.toFixed(2)+' m';}},title:{display:true,text:'m/slag',color:'#7a7870',font:{size:10}}}}}});
 
   // Tre grafer historikk - pace per sone siste 20 uker
   var now20=Date.now()-20*7*86400000;
@@ -803,7 +810,7 @@ async function loadApp(){
     {label:'Rolig',data:zoneAvg('easy',allZoneWeeks),borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.08)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#1D9E75',tension:0.3,fill:false,spanGaps:true},
     {label:'Aerob/terskel',data:zoneAvg('mid',allZoneWeeks),borderColor:'#EF9F27',backgroundColor:'rgba(239,159,39,0.08)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#EF9F27',tension:0.3,fill:false,spanGaps:true},
     {label:'VO2max',data:zoneAvg('hard',allZoneWeeks),borderColor:'#E24B4A',backgroundColor:'rgba(226,75,74,0.08)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#E24B4A',tension:0.3,fill:false,spanGaps:true}
-  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e1f1c',bodyColor:'#e8e6df'}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},maxRotation:45}},y:{reverse:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},callback:function(v){var m=Math.floor(v),s=Math.round((v-m)*60);return m+':'+(s<10?'0':'')+s;}}}}}});
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e1f1c',bodyColor:'#e8e6df',callbacks:{label:function(ctx){var v=ctx.parsed.y;if(!v)return'';var m=Math.floor(v),s=Math.round((v-m)*60);return ctx.dataset.label+': '+m+':'+(s<10?'0':'')+s+' min/km';}}}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},maxRotation:45}},y:{reverse:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},callback:function(v){var m=Math.floor(v),s=Math.round((v-m)*60);return m+':'+(s<10?'0':'')+s;}}}}}});
 
   // Volum historikk - siste 20 uker
   var wk20=[];
