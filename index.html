@@ -609,7 +609,7 @@ function logout(){
 }
 
 function s2t(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return h>0?`${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:`${m}:${String(sec).padStart(2,'0')}`;}
-function paceStr(mps,dist){if(!mps||mps<0.5||dist<500)return'—';const mpk=1000/(mps*60);const m=Math.floor(mpk),s=Math.round((mpk-m)*60);return`${m}:${String(s).padStart(2,'0')}`;}
+function paceStr(mps,dist){if(!mps||mps<0.5||dist<500)return'—';const mpk=1000/(mps*60);const m=Math.floor(mpk),s=Math.round((mpk-m)*60);const ss=String(s).padStart(2,'0');return m+':'+ss;}
 function typeLabel(t){return{Run:'Løping',Ride:'Sykling',VirtualRide:'Sykling',Rowing:'Roing',WeightTraining:'Styrke',Workout:'Trening',Walk:'Gange',Hike:'Tur'}[t]||t;}
 function typeCls(t){if(t==='Run')return'run';if(t==='Ride'||t==='VirtualRide')return'ride';if(t==='Rowing')return'row';if(t==='WeightTraining'||t==='Workout')return'str';return'other';}
 function weekKey(ds){const d=new Date(ds);const day=d.getDay()||7;d.setDate(d.getDate()-day+1);return d.toISOString().slice(0,10);}
@@ -692,8 +692,10 @@ async function loadApp(){
   const pw=Object.keys(pbw).sort();
   const pv=pw.map(w=>{const avg=pbw[w].reduce((s,v)=>s+v,0)/pbw[w].length;return+(1000/(avg*60)).toFixed(2);});
   if(charts.pace)charts.pace.destroy();
-  charts.pace=new Chart($('paceChart'),{type:'line',data:{labels:pw.map(w=>w.slice(5)),datasets:[{label:'min/km',data:pv,borderColor:'#5DCAA5',borderWidth:2,pointRadius:3,pointBackgroundColor:'#5DCAA5',tension:0.3,fill:false}]},
-    options:{...CD,scales:{...CD.scales,y:{...CD.scales.y,reverse:true,ticks:{...CD.scales.y.ticks,callback:v=>{const m=Math.floor(v),s=Math.round((v-m)*60);return`${m}:${String(s).padStart(2,'0')}`;}}}}});
+  var paceOpts=JSON.parse(JSON.stringify({responsive:true,maintainAspectRatio:false}));
+  paceOpts.plugins={legend:{display:false},tooltip:{backgroundColor:'#1e1f1c',bodyColor:'#e8e6df'}};
+  paceOpts.scales={x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:12}},y:{reverse:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},callback:function(v){var m=Math.floor(v),s=Math.round((v-m)*60);return m+':'+(s<10?'0'+s:s);}}}};
+  charts.pace=new Chart($('paceChart'),{type:'line',data:{labels:pw.map(function(w){return w.slice(5);}),datasets:[{label:'min/km',data:pv,borderColor:'#5DCAA5',borderWidth:2,pointRadius:3,pointBackgroundColor:'#5DCAA5',tension:0.3,fill:false}]},options:paceOpts});
 
   const eff=runs.filter(a=>a.average_heartrate&&a.average_speed&&a.distance>2000).map(a=>({w:weekKey(a.start_date),v:+((a.average_speed*1000)/a.average_heartrate).toFixed(2)}));
   const ebw={};eff.forEach(d=>{if(!ebw[d.w])ebw[d.w]=[];ebw[d.w].push(d.v);});
