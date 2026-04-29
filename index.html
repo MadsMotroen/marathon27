@@ -186,6 +186,9 @@ tr:last-child td{border-bottom:none;}
 .radar-stat-val{font-weight:500;color:var(--text);}
 .intensity-note{font-size:11px;color:var(--muted);padding:8px 12px;background:var(--surface2);border-radius:6px;margin-top:8px;}
 @media(max-width:700px){.radar-wrap{grid-template-columns:1fr;}}
+
+/* STYRKE */
+.str-low-rep{color:var(--amber);font-size:10px;margin-left:4px;}
 </style>
 </head>
 <body>
@@ -225,6 +228,7 @@ tr:last-child td{border-bottom:none;}
     <button class="tab active" onclick="showTab('overview')">Oversikt</button>
     <button class="tab" onclick="showTab('program')">Treningsprogram</button>
     <button class="tab" onclick="showTab('history')">Historikk</button>
+    <button class="tab" onclick="showTab('styrke')">Styrke</button>
     <button class="tab" onclick="showTab('activities')">Aktiviteter</button>
   </div>
   <div class="main">
@@ -333,6 +337,86 @@ tr:last-child td{border-bottom:none;}
       <div class="card">
         <div class="chart-title">Ukentlig løpevolum — siste 20 uker</div>
         <div class="chart-wrap tall"><canvas id="volHistChart" role="img" aria-label="Volum historikk">Volum historikk.</canvas></div>
+      </div>
+    </div>
+
+    <!-- STYRKE -->
+    <div id="tab-styrke" class="tab-content">
+      <div class="stats-grid">
+        <div class="stat-card hi">
+          <div class="stat-label">Benkpress — estimert 1RM</div>
+          <div class="stat-val teal" id="str-bench-1rm">—</div>
+          <div class="stat-unit">kg (mål: 100 kg)</div>
+          <div style="margin-top:8px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;">
+            <div id="bench-progress-bar" style="height:100%;border-radius:3px;background:var(--teal);transition:width 0.5s;width:0%;"></div>
+          </div>
+        </div>
+        <div class="stat-card hi">
+          <div class="stat-label">Pullups — beste sett</div>
+          <div class="stat-val teal" id="str-pullup-best">—</div>
+          <div class="stat-unit">reps (mål: 15)</div>
+          <div style="margin-top:8px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;">
+            <div id="pullup-progress-bar" style="height:100%;border-radius:3px;background:var(--teal);transition:width 0.5s;width:0%;"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Styrkeøkter siste 28 dager</div>
+          <div class="stat-val" id="str-count">—</div>
+          <div class="stat-unit">fra Strava</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pullups totalvolum</div>
+          <div class="stat-val" id="str-pullup-vol">—</div>
+          <div class="stat-unit">reps siste økt</div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="card">
+          <div class="chart-title">Benkpress — estimert 1RM over tid</div>
+          <div class="chart-wrap tall"><canvas id="benchChart" role="img" aria-label="Benkpress 1RM">Benkpress.</canvas></div>
+        </div>
+        <div class="card">
+          <div class="chart-title">Pullups — beste sett og totalvolum</div>
+          <div class="chart-wrap tall"><canvas id="pullupChart" role="img" aria-label="Pullups">Pullups.</canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="chart-title">Styrkeøkter per uke — siste 12 uker (Strava)</div>
+        <div class="chart-wrap"><canvas id="strConsChart" role="img" aria-label="Styrke konsistens">Konsistens.</canvas></div>
+      </div>
+
+      <div class="card">
+        <div class="chart-title">Logg ny økt</div>
+        <div class="riegel-input-row">
+          <div><label>Dato</label><input type="date" id="str-date"/></div>
+          <div><label>Øvelse</label><select id="str-exercise" onchange="toggleStrInputs()">
+            <option value="bench">Benkpress</option>
+            <option value="pullup">Pullups</option>
+          </select></div>
+          <div id="bench-inputs">
+            <label>Beste sett (vekt × reps)</label>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="number" id="str-weight" placeholder="85" style="width:70px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:6px 8px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;" min="0" step="0.5"/>
+              <span style="color:var(--muted);font-size:12px;">kg ×</span>
+              <input type="number" id="str-reps" placeholder="5" style="width:60px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:6px 8px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;" min="1" max="30"/>
+              <span style="color:var(--muted);font-size:12px;">reps</span>
+            </div>
+          </div>
+          <div id="pullup-inputs" style="display:none;">
+            <label>Sett (reps per sett, kommaseparert)</label>
+            <input type="text" id="str-pullup-sets" placeholder="10, 8, 7, 5" style="width:180px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:6px 8px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;"/>
+          </div>
+          <div><label>Merknad</label><input type="text" id="str-note" placeholder="Valgfritt" style="width:120px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:6px 8px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;"/></div>
+          <div><label>&nbsp;</label><button class="btn-add" onclick="addStrEntry()">Logg</button></div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="riegel-table">
+            <thead><tr><th>Dato</th><th>Øvelse</th><th>Detaljer</th><th>Est. 1RM / Volum</th><th>Merknad</th><th></th></tr></thead>
+            <tbody id="str-table"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -613,7 +697,7 @@ function toggleTheme(){
 
 function showTab(id){
   document.querySelectorAll('.tab').forEach(function(t,i){
-    t.classList.toggle('active',['overview','program','history','activities'][i]===id);
+    t.classList.toggle('active',['overview','program','history','styrke','activities'][i]===id);
   });
   document.querySelectorAll('.tab-content').forEach(function(c){c.classList.remove('active');});
   document.getElementById('tab-'+id).classList.add('active');
@@ -881,6 +965,7 @@ async function loadApp(){
 
   loadRaceActivities(activities);
   renderRadar(activities,WEEKS);
+  renderStrength(activities);
   renderProgram();
   hide('loading-screen');
   show('app','block');
@@ -1021,6 +1106,152 @@ function renderRadar(acts,weeks){
   statsEl.innerHTML='';
   r.labels.forEach(function(lbl,i){var row=document.createElement('div');row.className='radar-stat-row';row.innerHTML='<span class="radar-stat-label">'+lbl+'</span><span class="radar-stat-val">'+r.details[i]+'</span>';statsEl.appendChild(row);});
   if(noteEl){noteEl.textContent=Math.round(r.easyPct*100)+'% rolige økter siste 4 uker ('+r.totalRuns+' løpeøkter). Mål: 80%.';}
+}
+
+// ========== STYRKE ==========
+var strEntries=[];
+try{strEntries=JSON.parse(localStorage.getItem('str_entries')||'[]');}catch(e){}
+function saveStr(){try{localStorage.setItem('str_entries',JSON.stringify(strEntries));}catch(e){}}
+
+function epley(weight,reps){
+  if(reps===1)return weight;
+  return weight*(1+reps/30);
+}
+
+function toggleStrInputs(){
+  var ex=document.getElementById('str-exercise').value;
+  document.getElementById('bench-inputs').style.display=ex==='bench'?'block':'none';
+  document.getElementById('pullup-inputs').style.display=ex==='pullup'?'block':'none';
+}
+
+function addStrEntry(){
+  var date=document.getElementById('str-date').value;
+  var ex=document.getElementById('str-exercise').value;
+  var note=document.getElementById('str-note').value.trim();
+  if(!date){alert('Fyll inn dato');return;}
+  var entry={date:date,exercise:ex,note:note};
+  if(ex==='bench'){
+    var weight=parseFloat(document.getElementById('str-weight').value);
+    var reps=parseInt(document.getElementById('str-reps').value);
+    if(!weight||!reps){alert('Fyll inn vekt og reps');return;}
+    entry.weight=weight;entry.reps=reps;
+    entry.orm=+epley(weight,reps).toFixed(1);
+    entry.lowRep=reps<=2;
+    document.getElementById('str-weight').value='';
+    document.getElementById('str-reps').value='';
+  }else{
+    var setsStr=document.getElementById('str-pullup-sets').value.trim();
+    if(!setsStr){alert('Fyll inn sett');return;}
+    var sets=setsStr.split(/[,\s]+/).map(Number).filter(function(n){return n>0;});
+    entry.sets=sets;
+    entry.bestSet=Math.max.apply(null,sets);
+    entry.totalVol=sets.reduce(function(s,v){return s+v;},0);
+    document.getElementById('str-pullup-sets').value='';
+  }
+  strEntries.push(entry);
+  strEntries.sort(function(a,b){return a.date.localeCompare(b.date);});
+  saveStr();
+  document.getElementById('str-note').value='';
+  renderStrength(null);
+}
+
+function deleteStrEntry(idx){
+  strEntries.splice(idx,1);saveStr();renderStrength(null);
+}
+
+function renderStrength(acts){
+  // Nøkkeltall
+  var benchEntries=strEntries.filter(function(e){return e.exercise==='bench';});
+  var pullupEntries=strEntries.filter(function(e){return e.exercise==='pullup';});
+
+  var bestOrm=benchEntries.length>0?Math.max.apply(null,benchEntries.map(function(e){return e.orm;})):0;
+  var latestBench=benchEntries.length>0?benchEntries[benchEntries.length-1]:null;
+  var latestPullup=pullupEntries.length>0?pullupEntries[pullupEntries.length-1]:null;
+  var bestPullup=pullupEntries.length>0?Math.max.apply(null,pullupEntries.map(function(e){return e.bestSet;})):0;
+
+  var benchEl=document.getElementById('str-bench-1rm');
+  var pullupEl=document.getElementById('str-pullup-best');
+  var volEl=document.getElementById('str-pullup-vol');
+  if(benchEl)benchEl.textContent=latestBench?latestBench.orm.toFixed(1)+'  kg':'—';
+  if(pullupEl)pullupEl.textContent=bestPullup||'—';
+  if(volEl)volEl.textContent=latestPullup?latestPullup.totalVol+' reps':'—';
+
+  var benchBar=document.getElementById('bench-progress-bar');
+  var pullupBar=document.getElementById('pullup-progress-bar');
+  if(benchBar)benchBar.style.width=Math.min(100,bestOrm)+'%';
+  if(pullupBar)pullupBar.style.width=Math.min(100,bestPullup/15*100)+'%';
+
+  // Strava styrke-konsistens
+  if(acts){
+    var strActs=acts.filter(function(a){return a.type==='WeightTraining'||a.type==='Workout';});
+    var strCount28=strActs.filter(function(a){return new Date(a.start_date)>=Date.now()-28*86400000;}).length;
+    var strCountEl=document.getElementById('str-count');
+    if(strCountEl)strCountEl.textContent=strCount28;
+
+    // Konsistens per uke siste 12 uker
+    var now=Date.now();
+    var wkLabels=[],wkCounts=[];
+    for(var w=11;w>=0;w--){
+      var wStart=new Date(now-(w+1)*7*86400000);
+      var wEnd=new Date(now-w*7*86400000);
+      var wStr=strActs.filter(function(a){var d=new Date(a.start_date);return d>=wStart&&d<wEnd;});
+      wkLabels.push('U'+getISOWeek(wEnd));
+      wkCounts.push(wStr.length);
+    }
+    if(charts.strCons)charts.strCons.destroy();
+    var strConsEl=document.getElementById('strConsChart');
+    if(strConsEl){
+      charts.strCons=new Chart(strConsEl,{type:'bar',data:{labels:wkLabels,datasets:[
+        {label:'Styrkeøkter',data:wkCounts,backgroundColor:'rgba(239,159,39,0.5)',borderColor:'#EF9F27',borderWidth:1,borderRadius:2}
+      ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e1f1c',bodyColor:'#e8e6df'}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10}}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},stepSize:1}}}}});
+    }
+  }
+
+  // Benkpress graf
+  var benchEl2=document.getElementById('benchChart');
+  if(benchEl2&&benchEntries.length>0){
+    if(charts.bench)charts.bench.destroy();
+    charts.bench=new Chart(benchEl2,{type:'line',data:{labels:benchEntries.map(function(e){return e.date;}),datasets:[
+      {label:'Est. 1RM',data:benchEntries.map(function(e){return e.orm;}),borderColor:'#1D9E75',borderWidth:2,pointBackgroundColor:benchEntries.map(function(e){return e.lowRep?'#EF9F27':'#1D9E75';}),pointRadius:5,pointHoverRadius:7,tension:0.2,fill:false},
+      {label:'100kg mål',data:benchEntries.map(function(){return 100;}),borderColor:'rgba(226,75,74,0.4)',borderDash:[4,4],borderWidth:1,pointRadius:0,fill:false}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e1f1c',bodyColor:'#e8e6df',callbacks:{label:function(ctx){var e=benchEntries[ctx.dataIndex];if(!e)return'';var s=ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+' kg';if(e.lowRep)s+=' ⚠ lav-rep';return s;}}}},scales:{x:{type:'category',grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:12}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},callback:function(v){return v+' kg';}},suggestedMin:60,suggestedMax:105}}}});
+  }
+
+  // Pullups graf
+  var pullupEl2=document.getElementById('pullupChart');
+  if(pullupEl2&&pullupEntries.length>0){
+    if(charts.pullup)charts.pullup.destroy();
+    charts.pullup=new Chart(pullupEl2,{type:'bar',data:{labels:pullupEntries.map(function(e){return e.date;}),datasets:[
+      {label:'Totalvolum',data:pullupEntries.map(function(e){return e.totalVol;}),backgroundColor:'rgba(175,169,236,0.3)',borderColor:'#AFA9EC',borderWidth:1,borderRadius:2,yAxisID:'y2'},
+      {label:'Beste sett',data:pullupEntries.map(function(e){return e.bestSet;}),type:'line',borderColor:'#1D9E75',borderWidth:2,pointBackgroundColor:'#1D9E75',pointRadius:5,tension:0.2,fill:false,yAxisID:'y'},
+      {label:'15 mål',data:pullupEntries.map(function(){return 15;}),type:'line',borderColor:'rgba(226,75,74,0.4)',borderDash:[4,4],borderWidth:1,pointRadius:0,fill:false,yAxisID:'y'}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e1f1c',bodyColor:'#e8e6df'}},scales:{x:{type:'category',grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:12}},y:{position:'left',grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},stepSize:1},suggestedMax:18,title:{display:true,text:'Reps',color:'#7a7870',font:{size:10}}},y2:{position:'right',grid:{display:false},ticks:{color:'#7a7870',font:{size:10}},title:{display:true,text:'Totalvolum',color:'#7a7870',font:{size:10}}}}}});
+  }
+
+  // Tabell
+  var tbody=document.getElementById('str-table');
+  if(!tbody)return;
+  tbody.innerHTML='';
+  var sorted=[].concat(strEntries).reverse();
+  sorted.forEach(function(e,i){
+    var idx=strEntries.length-1-i;
+    var details='',metric='';
+    if(e.exercise==='bench'){
+      details=e.weight+'kg x '+e.reps+' reps';
+      metric='<b>'+e.orm.toFixed(1)+'</b> kg 1RM'+(e.lowRep?'<span class="str-low-rep">⚠ lav-rep</span>':'');
+    }else{
+      details=e.sets?e.sets.join(', '):'—';
+      metric='Beste: <b>'+e.bestSet+'</b> | Total: <b>'+e.totalVol+'</b>';
+    }
+    tbody.innerHTML+='<tr>'
+      +'<td>'+e.date+'</td>'
+      +'<td>'+(e.exercise==='bench'?'Benkpress':'Pullups')+'</td>'
+      +'<td style="color:var(--muted);">'+details+'</td>'
+      +'<td>'+metric+'</td>'
+      +'<td style="color:var(--muted);font-size:11px;">'+( e.note||'')+'</td>'
+      +'<td><button class="btn-del" onclick="deleteStrEntry('+idx+')">x</button></td>'
+      +'</tr>';
+  });
 }
 function renderProgram(){
   // Fasebar
