@@ -644,7 +644,7 @@ function typeLabel(t){return{Run:'Løping',Ride:'Sykling',VirtualRide:'Sykling',
 function typeCls(t){if(t==='Run')return'run';if(t==='Ride'||t==='VirtualRide')return'ride';if(t==='Rowing')return'row';if(t==='WeightTraining'||t==='Workout')return'str';return'other';}
 function weekKey(ds){var d=new Date(ds);var day=d.getDay()||7;d.setDate(d.getDate()-day+1);return d.toISOString().slice(0,10);}
 function mPerSllag(a){if(!a.average_heartrate||!a.moving_time||!a.distance||a.moving_time<60)return null;return a.distance/(a.moving_time/60*a.average_heartrate);}
-function isTest(a){return /3.{0,4}3.{0,5}k/i.test(a.name)||/3x3/i.test(a.name)||/3 x 3/i.test(a.name);}
+function isTest(a){var nm=a.name||'';return /3x\s*3k/i.test(nm)||/3\s*x\s*3\s*k/i.test(nm)||/3x3/i.test(nm);}
 
 var chartOpts=function(extra){
   var o={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e1f1c',bodyColor:'#e8e6df',titleColor:'#7a7870'}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:16}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10}}}}};
