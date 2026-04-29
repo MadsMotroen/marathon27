@@ -256,7 +256,7 @@ tr:last-child td{border-bottom:none;}
         <div class="legend-row">
           <div class="leg"><div class="leg-sq" style="background:#AFA9EC;border-radius:50%;"></div>Økt</div>
           <div class="leg"><div class="leg-sq" style="background:#EF9F27;border-radius:50%;width:12px;height:12px;"></div>3×3 km test</div>
-          
+          <div class="leg"><div class="leg-sq" style="background:#1D9E75;"></div>Ukesnitt</div>
         </div>
         <div class="chart-wrap xtall"><canvas id="effProgChart" role="img" aria-label="Meter per pulsslag progresjon">m/slag progresjon.</canvas></div>
       </div>
@@ -752,23 +752,20 @@ async function loadApp(){
     return{date:new Date(a.start_date),mps:+mps.toFixed(3),hr:Math.round(a.average_heartrate),test:isTest(a),name:a.name};
   }).filter(Boolean).sort(function(a,b){return a.date-b.date;});
 
-
-
   var total=effData.length;
-  var scatterPts=effData.map(function(d,i){
-    var alpha=0.3+0.7*(i/Math.max(total-1,1));
+  var normEffPts=effData.filter(function(d){return !d.test;}).map(function(d,i,arr){
+    var alpha=0.25+0.75*(i/Math.max(arr.length-1,1));
     var r=Math.round(175*alpha),g=Math.round(169*alpha),b=Math.round(236*alpha);
-    return{x:d.date.toLocaleDateString('no-NO',{day:'2-digit',month:'short'}),y:d.mps,isTest:d.test,hr:d.hr,name:d.name,col:'rgba('+r+','+g+','+b+',0.85)'};
+    return{x:d.date.getTime(),y:d.mps,dateStr:d.date.toLocaleDateString('no-NO',{day:'2-digit',month:'short',year:'numeric'}),col:'rgba('+r+','+g+','+b+',0.85)'};
   });
-  var testPts=scatterPts.filter(function(p){return p.isTest;});
-  var normPts=scatterPts.filter(function(p){return !p.isTest;});
-
+  var testEffPts=effData.filter(function(d){return d.test;}).map(function(d){
+    return{x:d.date.getTime(),y:d.mps,dateStr:d.date.toLocaleDateString('no-NO',{day:'2-digit',month:'short',year:'numeric'})};
+  });
   if(charts.effProg)charts.effProg.destroy();
   charts.effProg=new Chart(gid('effProgChart'),{type:'scatter',data:{datasets:[
-    {label:'Økt',data:normPts.map(function(p){return{x:p.x,y:p.y};}),backgroundColor:normPts.map(function(p){return p.col;}),pointRadius:4,pointHoverRadius:6},
-    {label:'3x3 km test',data:testPts.map(function(p){return{x:p.x,y:p.y};}),backgroundColor:'#EF9F27',pointRadius:7,pointStyle:'star',pointHoverRadius:9},
-
-  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e1f1c',bodyColor:'#e8e6df',callbacks:{label:function(ctx){return(ctx.dataset.label||'')+': '+ctx.parsed.y.toFixed(3)+' m/slag';}}}},scales:{x:{type:'category',grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:16}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},callback:function(v){return v.toFixed(2)+' m';}}}}}});
+    {label:'Økt',data:normEffPts.map(function(p){return{x:p.x,y:p.y,dateStr:p.dateStr};}),backgroundColor:normEffPts.map(function(p){return p.col;}),pointRadius:4,pointHoverRadius:6},
+    {label:'3x3 km test',data:testEffPts.map(function(p){return{x:p.x,y:p.y,dateStr:p.dateStr};}),backgroundColor:'#EF9F27',borderColor:'#ffffff',borderWidth:1.5,pointRadius:9,pointStyle:'star',pointHoverRadius:12}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e1f1c',bodyColor:'#e8e6df',callbacks:{label:function(ctx){var ds=ctx.raw&&ctx.raw.dateStr?ctx.raw.dateStr:'';return(ctx.dataset.label||'')+(ds?' ('+ds+')':'')+': '+ctx.parsed.y.toFixed(3)+' m/slag';}}}},scales:{x:{type:'linear',grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:12,callback:function(v){var d=new Date(v);return d.toLocaleDateString('no-NO',{day:'2-digit',month:'short'});}},title:{display:false}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#7a7870',font:{size:10},callback:function(v){return v.toFixed(2)+' m';}}}}}});
 
   // Scatter intensitet - numerisk HR på x, m/slag på y
   var scatterNormData=effData.filter(function(d){return !d.test;}).map(function(d,i){
