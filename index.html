@@ -261,6 +261,35 @@ tr:last-child td{border-bottom:none;}
           <div class="act-hours" id="act-hours"></div>
         </div>
       </div>
+      <div class="card">
+        <div class="chart-title">Løpekart — heatmap</div>
+        <div class="heatmap-wrap" id="heatmap-wrap"></div>
+      </div>
+      <div class="charts-grid">
+        <div class="card">
+          <div class="chart-title">Fitness Fingerprint</div>
+          <div class="radar-wrap">
+            <div class="radar-chart-wrap"><canvas id="radarChart" role="img" aria-label="Fitness Fingerprint">Radar.</canvas></div>
+            <div class="radar-stats" id="radar-stats"></div>
+          </div>
+          <div class="intensity-note" id="intensity-note"></div>
+        </div>
+        <div class="card">
+          <div class="chart-title">Prestasjonsprogresjon — Riegel</div>
+          <div class="sparkline-wrap"><canvas id="riegelSparkline" role="img" aria-label="Riegel progresjon">Sparkline.</canvas></div>
+          <div class="riegel-input-row">
+            <div><label>Dato</label><input type="date" id="r-date"/></div>
+            <div><label>Distanse</label><select id="r-dist"><option value="5000">5 km</option><option value="9000">3x3 km test</option><option value="10000">10 km</option><option value="21097">Halvmaraton</option><option value="42195">Maraton</option></select></div>
+            <div><label>Tid (hh:mm:ss)</label><input type="text" id="r-time" placeholder="00:46:20" style="width:100px;"/></div>
+            <div><label>Merknad</label><input type="text" id="r-note" placeholder="Valgfritt" style="width:120px;"/></div>
+            <div><label>&nbsp;</label><button class="btn-add" onclick="addRiegelEntry()">Legg til</button></div>
+          </div>
+          <table class="riegel-table">
+            <thead><tr><th>Dato</th><th>Dist</th><th>Tid</th><th>→ 10k</th><th>→ HM</th><th>→ Maraton</th><th>Kilde</th><th></th></tr></thead>
+            <tbody id="riegel-table"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- TRENINGSPROGRAM -->
