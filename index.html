@@ -879,6 +879,8 @@ async function loadApp(){
       +'<td>'+(a.total_elevation_gain?Math.round(a.total_elevation_gain)+' m':'—')+'</td></tr>';
   });
 
+  loadRaceActivities(activities);
+  renderRadar(activities,WEEKS);
   renderProgram();
   hide('loading-screen');
   show('app','block');
